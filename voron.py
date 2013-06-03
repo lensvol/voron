@@ -1,16 +1,14 @@
 #coding: utf-8
 
 import os
-import re
-import sys
-import time
+import asyncore
 import codecs
 import pyinotify
 
 from optparse import OptionParser
 
 from parsers import CeleryParser, EchoParser
-from sinks import PrinterSink
+from sinks import PrinterSink, GraphiteSink
 
 
 BUFFER_SIZE = 4096
@@ -70,7 +68,7 @@ if __name__ == '__main__':
                           action="store_true", default=False)
     (options, args) = opt_parser.parse_args()
 
-    default_sink = PrinterSink()
+    default_sink = GraphiteSink(host='localhost', port=2003)
     file_mapping = {}
     parsers = {
         'echo': EchoParser(default_sink),
@@ -95,7 +93,7 @@ if __name__ == '__main__':
                     if not line:
                         break
                     parser.parse(line.strip())
-
+                    asyncore.loop(1, False, None, 1)
     else:
         for fn, parser in file_mapping.items():
             print '[%s] Watching %s...' % (parser.name, fn)
