@@ -7,7 +7,7 @@ import pyinotify
 
 from optparse import OptionParser
 
-from parsers import CeleryParser, EchoParser
+from parsers import CeleryParser, EchoParser, GunicornParser, NginxParser
 from sinks import PrinterSink, GraphiteSink
 
 
@@ -68,18 +68,21 @@ if __name__ == '__main__':
                           action="store_true", default=False)
     (options, args) = opt_parser.parse_args()
 
+    #default_sink = PrinterSink()
     default_sink = GraphiteSink(host='localhost', port=2003)
-    file_mapping = {}
     parsers = {
-        'echo': EchoParser(default_sink),
-        'celery': CeleryParser(default_sink)
+        'echo': EchoParser,
+        'celery': CeleryParser,
+        'gunicorn': GunicornParser,
+        'nginx': NginxParser
     }
 
+    file_mapping = {}
     for mapping in args:
         name, fn = mapping.split(':')
         if not name in parsers:
             raise ParserNotFound('Unknown parser: %s' % name)
-        file_mapping[os.path.abspath(fn)] = parsers[name]
+        file_mapping[os.path.abspath(fn)] = parsers[name](default_sink)
 
     wm = pyinotify.WatchManager()
     handler = FSEventHandler(mapping=file_mapping)
@@ -101,4 +104,4 @@ if __name__ == '__main__':
                          pyinotify.IN_OPEN | pyinotify.IN_CREATE | 
                          pyinotify.IN_DELETE | pyinotify.IN_MODIFY)
 
-    notifier.loop()
+        notifier.loop()
