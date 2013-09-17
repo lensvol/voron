@@ -1,9 +1,11 @@
+#!/usr/bin/env python
 #coding: utf-8
 
 import os
 import asyncore
 import codecs
 import pyinotify
+import sys
 
 from optparse import OptionParser
 
