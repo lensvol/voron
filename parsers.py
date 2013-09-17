@@ -2,6 +2,7 @@
 
 import apachelog
 import datetime
+import hashlib
 import logging
 import re
 import time
@@ -18,13 +19,15 @@ class LineParser(object):
         raise NotImplemented
 
 
-class EchoParser(LineParser):
+class HashParser(LineParser):
     name = 'Echo'
 
     def parse(self, line):
-        stamp = time.time()
-        key = 'sample_line'
-        value = line
+        m = hashlib.md5()
+        m.update(line)
+        key = m.hexdigest()
+        stamp = time.time()        
+        value = 1
 
         self.sink.emit(stamp, key, value)
         return True

@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 #coding: utf-8
 
-import os
 import asyncore
+import fcntl
 import codecs
+import os
 import pyinotify
 import sys
+import time
 
 from optparse import OptionParser
 
-from parsers import CeleryParser, EchoParser, GunicornParser, NginxParser
+from parsers import CeleryParser, HashParser, GunicornParser, NginxParser
 from sinks import PrinterSink, GraphiteSink
 
 
@@ -66,12 +68,15 @@ class FSEventHandler(pyinotify.ProcessEvent):
 
 if __name__ == '__main__':
     opt_parser = OptionParser()
-    opt_parser.add_option("-P", "--playback", dest="just_playback",
-                          help="Parse specified files and exit.",
+    opt_parser.add_option("-W", "--watch", dest="watch_mode",
+                          help="Watch for changes in specified files (<parser>:<file>).",
                           action="store_true", default=False)
     opt_parser.add_option("-s", "--sink", dest="sink",
                           help="Sink for processed time series data.",
                           action="store", default="print")
+    opt_parser.add_option("-p", "--parser", dest="parser",
+                          help="Parser for lines from files.",
+                          action="store", default="hash")
     (options, args) = opt_parser.parse_args()
 
     sinks = {
@@ -79,34 +84,43 @@ if __name__ == '__main__':
         'graphite': GraphiteSink
     }
     parsers = {
-        'echo': EchoParser,
+        'hash': HashParser,
         'celery': CeleryParser,
         'gunicorn': GunicornParser,
         'nginx': NginxParser
     }
     
-    default_sink = sinks.get(options.sink)
-    if not default_sink:
+    default_sink_cls = sinks.get(options.sink)
+    if not default_sink_cls:
         print '[ERROR] unknown sink: %s' % options.sink
         sys.exit(-1)
 
-    file_mapping = {}
-    for mapping in args:
-        name, fn = mapping.split(':')
-        if not name in parsers:
-            raise ParserNotFound('Unknown parser: %s' % name)
-        file_mapping[os.path.abspath(fn)] = parsers[name](default_sink())
+    default_parser_cls = parsers.get(options.parser)
+    if not default_parser_cls:
+        print '[ERROR] unknown parser: %s' % options.parser
+        sys.exit(-1)
 
-    if options.just_playback:
-        for fn, parser in file_mapping.items():
-            with codecs.open(fn, 'rt', 'utf-8') as fp:
-                while True:
-                    line = fp.readline()
-                    if not line:
-                        break
+    if not options.watch_mode:
+        parser = default_parser_cls(default_sink_cls())
+
+        fcntl.fcntl(sys.stdin, fcntl.F_SETFL, os.O_NONBLOCK) 
+        while True:
+            try:
+                line = sys.stdin.readline()
+            except IOError:
+                time.sleep(0.1)
+            else:
+                if line:
                     parser.parse(line.strip())
-                    asyncore.loop(1, False, None, 1)
+            asyncore.loop(1, False, None, 1)
     else:
+        file_mapping = {}
+        for mapping in args:
+            name, fn = mapping.split(':')
+            if not name in parsers:
+                raise ParserNotFound('Unknown parser: %s' % name)
+            file_mapping[os.path.abspath(fn)] = parsers[name](default_sink_cls())
+
         wm = pyinotify.WatchManager()
         handler = FSEventHandler(mapping=file_mapping)
         notifier = pyinotify.Notifier(wm, default_proc_fun=handler)
