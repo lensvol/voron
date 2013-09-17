@@ -84,10 +84,10 @@ if __name__ == '__main__':
                           help="Watch for changes in specified files.",
                           action="store_true", default=False)
     opt_parser.add_option("-s", "--sink", dest="sink",
-                          help="Sink for processed time series data.",
+                          help="Sink for processed time series data (%s)." % ', '.join(sinks.keys()),
                           action="store", default="print")
     opt_parser.add_option("-p", "--parser", dest="parser",
-                          help="Parser for lines from files.",
+                          help="Parser for lines from files (%s)." % ', '.join(parsers.keys()),
                           action="store", default="hash")
     (options, args) = opt_parser.parse_args()
     
