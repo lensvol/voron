@@ -89,12 +89,16 @@ if __name__ == '__main__':
     opt_parser.add_option("-p", "--parser", dest="parser",
                           help="Parser for lines from files (%s)." % ', '.join(parsers.keys()),
                           action="store", default="hash")
+    opt_parser.add_option("", "--prefix", dest="prefix",
+                          help="Prefix keys with specified string.",
+                          action="store", default=None)
     (options, args) = opt_parser.parse_args()
     
     default_sink_cls = sinks.get(options.sink)
     if not default_sink_cls:
         print '[ERROR] unknown sink: %s' % options.sink
         sys.exit(-1)
+    default_sink = default_sink_cls(prefix=options.prefix)
 
     default_parser_cls = parsers.get(options.parser)
     if not default_parser_cls:
@@ -102,7 +106,7 @@ if __name__ == '__main__':
         sys.exit(-1)
 
     if not options.watch_mode:
-        parser = default_parser_cls(default_sink_cls())
+        parser = default_parser_cls(default_sink)
 
         fcntl.fcntl(sys.stdin, fcntl.F_SETFL, os.O_NONBLOCK) 
         while True:
@@ -120,7 +124,7 @@ if __name__ == '__main__':
             name, fn = mapping.split(':')
             if not name in parsers:
                 raise ParserNotFound('Unknown parser: %s' % name)
-            file_mapping[os.path.abspath(fn)] = parsers[name](default_sink_cls())
+            file_mapping[os.path.abspath(fn)] = parsers[name]()
 
         wm = pyinotify.WatchManager()
         handler = FSEventHandler(mapping=file_mapping)

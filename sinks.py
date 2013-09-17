@@ -5,13 +5,19 @@ import asyncore, socket
 class DataSink(object):
     name = 'Default sink'
 
+    def __init__(self, prefix=None):
+        if prefix:
+            self.prefix = prefix
+        else:
+            self.prefix = ''
+
     def emit(self, timestamp, key, value):
         raise NotImplemented
 
 
 class PrinterSink(DataSink):
     def emit(self, timestamp, key, value):
-        print u'%s %s %i' % (key, value, timestamp)
+        print u'%s%s %s %i' % (self.prefix, key, value, timestamp)
 
 
 class GraphiteSink(DataSink, asyncore.dispatcher):
@@ -19,13 +25,13 @@ class GraphiteSink(DataSink, asyncore.dispatcher):
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect((self.host, self.port))
 
-    def __init__(self, host=None, port=2003):
+    def __init__(self, *args, **kwargs):        
         asyncore.dispatcher.__init__(self)
-        self.host = host or 'localhost'
-        self.port = port or 2003
+        self.host = kwargs.pop('host', 'localhost')
+        self.port = kwargs.pop('port', 2003)
         self.buffer = ''
         self.connect_to_graphite()
-        print self.host, self.port
+        super(GraphiteSink, self).__init__(*args, **kwargs)
 
     def handle_connect(self):
         print 'CONNECT'
@@ -44,6 +50,6 @@ class GraphiteSink(DataSink, asyncore.dispatcher):
         return (len(self.buffer) >= 8)
 
     def emit(self, timestamp, key, value):
-        line = '%s %s %i\n' % (key, value, timestamp)
+        line = '%s%s %s %i\n' % (self.prefix, key, value, timestamp)
         self.buffer += line
         print 'EMIT: %s' % line
