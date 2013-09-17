@@ -1,9 +1,10 @@
 #coding: utf-8
 
-import re
-import time
 import apachelog
 import datetime
+import logging
+import re
+import time
 
 
 class LineParser(object):
@@ -114,7 +115,7 @@ class CommonLogFormatParser(LineParser):
             self.sink.emit(timestamp, 'response.code.%s' % info['%>s'], '1')
         except apachelog.ApacheLogParserError:
             # TODO: логирование поломанных строчек
-            logger.debug(u"Line can't be parsed: %s" % line)
+            logging.debug(u"Line can't be parsed: %s" % line)
 
 
 class GunicornParser(CommonLogFormatParser):
