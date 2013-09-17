@@ -67,18 +67,6 @@ class FSEventHandler(pyinotify.ProcessEvent):
             self.consume_lines(event.pathname)
 
 if __name__ == '__main__':
-    opt_parser = OptionParser()
-    opt_parser.add_option("-W", "--watch", dest="watch_mode",
-                          help="Watch for changes in specified files (<parser>:<file>).",
-                          action="store_true", default=False)
-    opt_parser.add_option("-s", "--sink", dest="sink",
-                          help="Sink for processed time series data.",
-                          action="store", default="print")
-    opt_parser.add_option("-p", "--parser", dest="parser",
-                          help="Parser for lines from files.",
-                          action="store", default="hash")
-    (options, args) = opt_parser.parse_args()
-
     sinks = {
         'print': PrinterSink,
         'graphite': GraphiteSink
@@ -89,6 +77,19 @@ if __name__ == '__main__':
         'gunicorn': GunicornParser,
         'nginx': NginxParser
     }
+
+
+    opt_parser = OptionParser(usage='%s [-W (<%s>:<filename> ...)]' % (sys.argv[0], '|'.join(parsers.keys())))
+    opt_parser.add_option("-W", "--watch", dest="watch_mode",
+                          help="Watch for changes in specified files.",
+                          action="store_true", default=False)
+    opt_parser.add_option("-s", "--sink", dest="sink",
+                          help="Sink for processed time series data.",
+                          action="store", default="print")
+    opt_parser.add_option("-p", "--parser", dest="parser",
+                          help="Parser for lines from files.",
+                          action="store", default="hash")
+    (options, args) = opt_parser.parse_args()
     
     default_sink_cls = sinks.get(options.sink)
     if not default_sink_cls:
