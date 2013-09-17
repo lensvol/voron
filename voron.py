@@ -66,27 +66,33 @@ if __name__ == '__main__':
     opt_parser.add_option("-P", "--playback", dest="just_playback",
                           help="Parse specified files and exit.",
                           action="store_true", default=False)
+    opt_parser.add_option("-s", "--sink", dest="sink",
+                          help="Sink for processed time series data.",
+                          action="store", default="print")
     (options, args) = opt_parser.parse_args()
 
-    #default_sink = PrinterSink()
-    default_sink = GraphiteSink(host='localhost', port=2003)
+    sinks = {
+        'print': PrinterSink,
+        'graphite': GraphiteSink
+    }
     parsers = {
         'echo': EchoParser,
         'celery': CeleryParser,
         'gunicorn': GunicornParser,
         'nginx': NginxParser
     }
+    
+    default_sink = sinks.get(options.sink)
+    if not default_sink:
+        print '[ERROR] unknown sink: %s' % options.sink
+        sys.exit(-1)
 
     file_mapping = {}
     for mapping in args:
         name, fn = mapping.split(':')
         if not name in parsers:
             raise ParserNotFound('Unknown parser: %s' % name)
-        file_mapping[os.path.abspath(fn)] = parsers[name](default_sink)
-
-    wm = pyinotify.WatchManager()
-    handler = FSEventHandler(mapping=file_mapping)
-    notifier = pyinotify.Notifier(wm, default_proc_fun=handler)
+        file_mapping[os.path.abspath(fn)] = parsers[name](default_sink())
 
     if options.just_playback:
         for fn, parser in file_mapping.items():
@@ -98,6 +104,10 @@ if __name__ == '__main__':
                     parser.parse(line.strip())
                     asyncore.loop(1, False, None, 1)
     else:
+        wm = pyinotify.WatchManager()
+        handler = FSEventHandler(mapping=file_mapping)
+        notifier = pyinotify.Notifier(wm, default_proc_fun=handler)
+
         for fn, parser in file_mapping.items():
             print '[%s] Watching %s...' % (parser.name, fn)
             wm.add_watch(os.path.dirname(fn), 
