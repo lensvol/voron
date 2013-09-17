@@ -35,6 +35,7 @@ class FSEventHandler(pyinotify.ProcessEvent):
         lines = data.split('\n')
         for line in lines[:-1]:
             handler.parse(line)
+            asyncore.loop(1, False, None, 1)
         fp.seek(len(lines[-1]), 1)
 
     def open_file(self, fn):
