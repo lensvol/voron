@@ -113,7 +113,7 @@ class CommonLogFormatParser(LineParser):
             # Некоторые веб-серверы (gunicorn до определенных версий)
             # не пишут размер ответа в лог, поэтому нужна явная проверка.
             if uri:
-                if info['%b'] != 'None':
+                if info['%b'] != 'None' and info['%>s'] == '200':
                     self.sink.emit('timing', 'response.%s.size' % uri, info['%b'], timestamp=timestamp)
                 self.sink.emit('timing', 'response.%s.%s' % (uri, info['%>s']), '1', timestamp=timestamp)
 
