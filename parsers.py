@@ -29,7 +29,7 @@ class HashParser(LineParser):
         stamp = time.time()        
         value = 1
 
-        self.sink.emit(stamp, key, value)
+        self.sink.emit('timing', key, value, timestamp=stamp)
         return True
 
 
@@ -51,7 +51,8 @@ class CeleryParser(LineParser):
             task_name = m.group(2)
             task_id = m.group(3)
 
-            self.sink.emit(timestamp, 'celery.tasks.%s.started' % task_name, '1')
+            self.sink.emit('counter', 'celery.tasks.%s.started' % task_name, '1', 
+                           timestamp=timestamp)
             return True
 
         m = self.succeeded_re.match(line)
@@ -61,7 +62,8 @@ class CeleryParser(LineParser):
             task_id = m.group(3)
             duration = m.group(4)
 
-            self.sink.emit(timestamp, 'celery.tasks.%s.duration' % task_name, duration)
+            self.sink.emit('gauge', 'celery.tasks.%s.duration' % task_name, duration,
+                           timestamp=timestamp)
             return True
 
         return False
@@ -112,10 +114,11 @@ class CommonLogFormatParser(LineParser):
             # не пишут размер ответа в лог, поэтому нужна явная проверка.
             if uri:
                 if info['%b'] != 'None':
-                    self.sink.emit(timestamp, 'response.%s.size' % uri, info['%b'])
-                self.sink.emit(timestamp, 'response.%s.%s' % (uri, info['%>s']), '1')
+                    self.sink.emit('timing', 'response.%s.size' % uri, info['%b'], timestamp=timestamp)
+                self.sink.emit('timing', 'response.%s.%s' % (uri, info['%>s']), '1', timestamp=timestamp)
 
-            self.sink.emit(timestamp, 'response.code.%s' % info['%>s'], '1')
+            self.sink.emit('counter', 'response.code.%s' % info['%>s'], '1',
+                           timestamp=timestamp)
         except apachelog.ApacheLogParserError:
             # TODO: логирование поломанных строчек
             logging.debug(u"Line can't be parsed: %s" % line)

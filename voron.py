@@ -12,7 +12,7 @@ import time
 from optparse import OptionParser
 
 from parsers import CeleryParser, HashParser, GunicornParser, NginxParser
-from sinks import PrinterSink, GraphiteSink
+from sinks import PrinterSink, GraphiteSink, StatsiteSink
 
 
 BUFFER_SIZE = 4096
@@ -69,7 +69,8 @@ class FSEventHandler(pyinotify.ProcessEvent):
 if __name__ == '__main__':
     sinks = {
         'print': PrinterSink,
-        'graphite': GraphiteSink
+        'graphite': GraphiteSink,
+        'statsite': StatsiteSink
     }
     parsers = {
         'hash': HashParser,
