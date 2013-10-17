@@ -66,7 +66,7 @@ class FSEventHandler(pyinotify.ProcessEvent):
         if event.pathname in self.mapping:
             self.consume_lines(event.pathname)
 
-if __name__ == '__main__':
+def main():
     sinks = {
         'print': PrinterSink,
         'graphite': GraphiteSink,
@@ -138,3 +138,7 @@ if __name__ == '__main__':
                          pyinotify.IN_DELETE | pyinotify.IN_MODIFY)
 
         notifier.loop()
+
+
+if __name__ == '__main__':
+    main()

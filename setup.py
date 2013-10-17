@@ -19,7 +19,7 @@ history = open('HISTORY.md').read()
 
 setup(
     name='voron',
-    version='0.2.0',
+    version='0.2.1',
     description='Tool for converting web server logs into statsd/graphite time series.',
     long_description=readme + '\n\n' + history,
     author='Kirill Borisov',
@@ -31,8 +31,14 @@ setup(
     package_dir={'voron': 'voron'},
     include_package_data=True,
     install_requires=[
-        'pyinotify'
+        'pyinotify',
+        'apachelog'
     ],
+    entry_points={
+        "console_scripts": [
+            'voron=voron.voron:main'
+        ]
+    },
     license="BSD",
     zip_safe=False,
     keywords='voron',

@@ -1,5 +1,8 @@
 # History
 
+## 0.2.1
+* Added entry points in setup.py, now voron can be run from command line.
+
 ## 0.2.0
 * "Watch mode" is now have to be explicitly specified, by default we try to read data from stdin.
 * Ability to load data from multiple files in one go has been removed.
