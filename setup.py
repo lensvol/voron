@@ -14,12 +14,12 @@ if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
     sys.exit()
 
-readme = open('README.rst').read()
-history = open('HISTORY.rst').read().replace('.. :changelog:', '')
+readme = open('README.md').read()
+history = open('HISTORY.md').read()
 
 setup(
     name='voron',
-    version='0.1.0',
+    version='0.2.0',
     description='Tool for converting web server logs into statsd/graphite time series.',
     long_description=readme + '\n\n' + history,
     author='Kirill Borisov',
@@ -31,12 +31,13 @@ setup(
     package_dir={'voron': 'voron'},
     include_package_data=True,
     install_requires=[
+        'pyinotify'
     ],
     license="BSD",
     zip_safe=False,
     keywords='voron',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Natural Language :: English',
