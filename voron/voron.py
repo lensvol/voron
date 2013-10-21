@@ -125,7 +125,7 @@ def main():
             name, fn = mapping.split(':')
             if not name in parsers:
                 raise ParserNotFound('Unknown parser: %s' % name)
-            file_mapping[os.path.abspath(fn)] = parsers[name]()
+            file_mapping[os.path.abspath(fn)] = parsers[name](default_sink)
 
         wm = pyinotify.WatchManager()
         handler = FSEventHandler(mapping=file_mapping)
