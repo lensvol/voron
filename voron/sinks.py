@@ -9,7 +9,7 @@ class DataSink(object):
 
     def __init__(self, prefix=None):
         if prefix:
-            self.prefix = prefix
+            self.prefix = '%s.' % prefix
         else:
             self.prefix = ''
 
@@ -60,13 +60,14 @@ class GraphiteSink(DataSink, asyncore.dispatcher):
         self.buffer += line
         print 'EMIT: %s' % line
 
-
+ 
 class StatsiteSink(DataSink):
     name = 'statsd sink'
 
     def __init__(self, *args, **kwargs):
-        self.host = '127.0.0.1'
-        self.port = 8125
+        super(StatsiteSink, self).__init__(*args, **kwargs)
+        self.host = kwargs.pop('host', '127.0.0.1')
+        self.port = kwargs.pop('port', 8125)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     def emit(self, metric_type, key, value, **kwargs):
@@ -78,5 +79,5 @@ class StatsiteSink(DataSink):
         }
         assert metric_type in codes, 'Unknown metric type!'
 
-        self.sock.sendto('%s:%s|%s' % (key, value, codes[metric_type]),
+        self.sock.sendto('%s%s:%s|%s' % (self.prefix, key, value, codes[metric_type]),
                          (self.host, self.port))

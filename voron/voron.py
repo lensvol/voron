@@ -132,7 +132,6 @@ def main():
         notifier = pyinotify.Notifier(wm, default_proc_fun=handler)
 
         for fn, parser in file_mapping.items():
-            print '[%s] Watching %s...' % (parser.name, fn)
             wm.add_watch(os.path.dirname(fn), 
                          pyinotify.IN_OPEN | pyinotify.IN_CREATE | 
                          pyinotify.IN_DELETE | pyinotify.IN_MODIFY)
